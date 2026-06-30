@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Claude-a-gotchi — a pixel Claude that lives in your editor</title>
+<meta name="description" content="Claude-a-gotchi is a pixel-art Claude companion that lives in your editor sidebar, codes along while you type, celebrates big generated blocks, gets hungry for context, and naps when you idle." />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0c0a09;
+    --bg-soft: #141010;
+    --panel: #181311;
+    --panel-raised: #1f1814;
+    --line: #2c2420;
+    --line-soft: rgba(255,255,255,.08);
+    --text: #f4ede8;
+    --muted: #bca99f;
+    --faint: #7c6f66;
+    --accent: #CD7F6A;
+    --accent-light: #e3a48f;
+    --accent-deep: #a85f48;
+    --green: #6fd08a;
+    --shadow: 0 24px 70px rgba(0,0,0,.5);
+    --screen: #0f0f0f;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.022), rgba(255,255,255,0) 280px),
+      radial-gradient(ellipse at top, rgba(205,127,106,.16), transparent 540px),
+      var(--bg);
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .16;
+    background-image:
+      linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(180deg, #000 0, transparent 72%);
+  }
+  canvas { image-rendering: pixelated; }
+  a { color: inherit; }
+  .wrap { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    background: rgba(12,10,9,.84);
+    backdrop-filter: blur(16px);
+  }
+  .nav-inner {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    font-weight: 800;
+  }
+  .brand img { width: 30px; height: 30px; border-radius: 6px; }
+  .brand span { font-family: "Press Start 2P", monospace; font-size: 12px; }
+  .nav-links { display: flex; align-items: center; gap: 20px; color: var(--muted); font-size: 14px; }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid rgba(205,127,106,.55);
+    border-radius: 8px;
+    color: #1a120e;
+    background: linear-gradient(180deg, var(--accent-light), var(--accent));
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(205,127,106,.24);
+  }
+
+  .hero { position: relative; padding: 28px 0 40px; overflow: hidden; }
+  .hero-shell {
+    position: relative;
+    border: 1px solid var(--line-soft);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background:
+      radial-gradient(ellipse at 78% 40%, rgba(205,127,106,.18), transparent 60%),
+      #0a0807;
+    isolation: isolate;
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(280px, .95fr);
+    gap: 34px;
+    align-items: center;
+    min-height: 540px;
+    padding: clamp(28px, 5vw, 56px);
+  }
+  h1 { margin: 0; font-size: clamp(40px, 6vw, 68px); line-height: .98; }
+  .pixel-title {
+    display: block;
+    margin-bottom: 16px;
+    color: var(--accent-light);
+    font-family: "Press Start 2P", monospace;
+    font-size: clamp(18px, 3vw, 34px);
+    line-height: 1.25;
+    text-shadow:
+      2px 0 #160f0c, -2px 0 #160f0c, 0 2px #160f0c, 0 -2px #160f0c,
+      0 5px #5e3324, 0 10px 24px rgba(205,127,106,.34);
+  }
+  .headline-line { display: block; }
+  .hero-copy { max-width: 520px; margin: 22px 0 0; color: #ddd0c8; font-size: clamp(17px, 2.2vw, 21px); }
+  .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 30px; }
+  .button {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 48px; padding: 0 18px; border-radius: 9px;
+    font-weight: 850; text-decoration: none; border: 1px solid transparent;
+  }
+  .button.primary {
+    color: #1a120e;
+    background: linear-gradient(180deg, var(--accent-light), var(--accent));
+    box-shadow: 0 16px 34px rgba(205,127,106,.3);
+  }
+  .button.secondary { color: #f0ddd3; border-color: rgba(205,127,106,.5); background: rgba(205,127,106,.14); }
+
+  .hero-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+    min-height: 360px;
+    border-radius: 18px;
+    background:
+      linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px),
+      var(--screen);
+    background-size: calc(100%/20) calc(100%/20), calc(100%/20) calc(100%/20), 100% 100%;
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .hero-stage canvas { width: min(280px, 78%); height: auto; }
+
+  .section { padding: 56px 0; }
+  .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
+  h2 { margin: 0; font-size: clamp(28px, 4vw, 42px); line-height: 1; }
+  .kicker { margin: 0 0 12px; color: var(--accent); font-size: 12px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+  .section-copy { max-width: 560px; margin: 0; color: var(--muted); font-size: 17px; }
+
+  .install-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr); gap: 18px; }
+  .panel {
+    border: 1px solid var(--line-soft);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.022));
+    box-shadow: 0 18px 46px rgba(0,0,0,.26);
+  }
+  .install-card { padding: 24px; }
+  .lead { margin: 0 0 18px; color: #e2d6cd; font-size: 18px; }
+  .term { overflow: hidden; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: #080706; }
+  .term-bar { display: flex; align-items: center; gap: 7px; min-height: 42px; padding: 0 12px; border-bottom: 1px solid rgba(255,255,255,.1); background: #141010; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .copy {
+    margin-left: auto; min-height: 30px; padding: 0 11px;
+    border: 1px solid rgba(255,255,255,.1); border-radius: 7px;
+    color: #1a120e; background: var(--accent); font-size: 12.5px; font-weight: 850; cursor: pointer;
+  }
+  .copy.copied { background: var(--green); }
+  .term-body { padding: 16px; }
+  .term-body code { color: #e7ddd4; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+  .prompt { color: var(--green); user-select: none; margin-right: 8px; }
+  .hint { margin: 14px 0 0; color: var(--muted); font-size: 14px; }
+  details { margin-top: 14px; color: var(--muted); }
+  summary { cursor: pointer; }
+  details code { color: #e7ddd4; font-family: ui-monospace, Menlo, monospace; }
+
+  .proof-card { display: grid; gap: 12px; padding: 18px; }
+  .proof-row {
+    display: grid; grid-template-columns: 52px 1fr; gap: 12px; align-items: center;
+    padding: 12px; border: 1px solid rgba(255,255,255,.08); border-radius: 12px; background: rgba(255,255,255,.03);
+  }
+  .chip {
+    width: 52px; height: 52px; border-radius: 10px; display: grid; place-items: center;
+    background: var(--screen); border: 1px solid var(--line);
+  }
+  .chip canvas { width: 44px; height: 44px; }
+  .proof-row strong { display: block; line-height: 1.2; }
+  .proof-row span { display: block; color: var(--muted); font-size: 13px; line-height: 1.35; margin-top: 3px; }
+
+  .feature-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .feature {
+    min-height: 252px; display: flex; flex-direction: column; justify-content: space-between;
+    padding: 18px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--panel);
+  }
+  .feature .screen { width: 100%; height: 116px; border-radius: 10px; display: grid; place-items: center; background: var(--screen); border: 1px solid var(--line); }
+  .feature .screen canvas { width: 96px; height: 96px; }
+  .feature h3 { margin: 16px 0 8px; font-size: 18px; line-height: 1.15; }
+  .feature p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+  .timeline { position: relative; display: grid; gap: 28px; max-width: 760px; margin: 42px auto 0; isolation: isolate; }
+  .timeline::before {
+    content: ""; position: absolute; left: 50%; top: 54px; bottom: 54px; width: 2px;
+    transform: translateX(-50%); background: linear-gradient(180deg, var(--accent-light), var(--accent), var(--green)); z-index: 0;
+  }
+  .milestone { position: relative; z-index: 1; display: grid; justify-items: center; }
+  .milestone-card {
+    display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 22px;
+    width: min(100%, 640px); padding: 22px 26px;
+    border: 1px solid var(--line-soft); border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)), var(--panel);
+    box-shadow: 0 0 0 10px var(--bg);
+  }
+  .milestone-card .screen { width: 88px; height: 88px; border-radius: 10px; display: grid; place-items: center; background: var(--screen); border: 1px solid var(--line); }
+  .milestone-card .screen canvas { width: 74px; height: 74px; }
+  .milestone-body { min-width: 0; text-align: left; }
+  .milestone-top { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+  .milestone h3 { margin: 0; font-size: 18px; }
+  .tag { padding: 4px 8px; border: 1px solid rgba(255,255,255,.13); border-radius: 999px; color: #efe2da; background: rgba(255,255,255,.06); font-size: 12px; font-weight: 800; }
+  .milestone p { max-width: 520px; margin: 0; color: var(--muted); }
+
+  footer { margin-top: 34px; padding: 32px 0 46px; border-top: 1px solid rgba(255,255,255,.07); color: var(--muted); font-size: 14px; }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+  .footer-inner a { color: var(--accent-light); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .hero-content { grid-template-columns: 1fr; }
+    .hero-stage { min-height: 260px; }
+    .install-grid, .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .install-grid, .feature-grid { grid-template-columns: 1fr; }
+    .section { padding: 44px 0; }
+    .section-head { display: block; }
+    .milestone-card { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    .milestone-body { text-align: center; }
+    .footer-inner { display: block; }
+  }
+</style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top" aria-label="Claude-a-gotchi home">
+        <img src="favicon.svg" alt="" />
+        <span>Claude-a-gotchi</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary navigation">
+        <a class="nav-cta" href="#quick-start">Install</a>
+        <a href="#features">Features</a>
+        <a href="#roadmap">Roadmap</a>
+        <a href="https://github.com/comacoded/claude-a-gotchi" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-shell">
+          <div class="hero-content">
+            <div>
+              <h1><span class="pixel-title">Claude-a-gotchi</span><span class="headline-line">A pixel Claude</span><span class="headline-line">in your sidebar.</span></h1>
+              <p class="hero-copy">Claude lives in your editor sidebar, reacts to real coding activity, celebrates big generated blocks, gets hungry for context, and naps when you step away.</p>
+              <div class="hero-actions">
+                <a class="button primary" href="#quick-start">Install Claude</a>
+                <a class="button secondary" href="#roadmap">View roadmap</a>
+              </div>
+            </div>
+            <div class="hero-stage">
+              <canvas data-hero="idle_breathe,work_coding,eating,dance_djmix,expression_sleep" aria-label="Live pixel Claude animation"></canvas>
+            </div>
+          </div>
+        </div>
+        <p class="hint" style="text-align:center;margin-top:14px">Works with VS Code, Cursor, and VSCodium.</p>
+      </div>
+    </section>
+
+    <section class="section" id="quick-start">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Quick start</p>
+            <h2>Install in one command.</h2>
+          </div>
+          <p class="section-copy">No Marketplace account needed. Run the installer, reload your editor window, and click the Claude icon in the activity bar.</p>
+        </div>
+
+        <div class="install-grid">
+          <div class="panel install-card">
+            <p class="lead">Use the hosted installer to fetch the latest packaged extension.</p>
+            <div class="term">
+              <div class="term-bar">
+                <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                <button class="copy" id="copy" aria-label="Copy install command"><span id="copy-label">Copy</span></button>
+              </div>
+              <div class="term-body">
+                <code id="cmd" data-cmd="curl -fsSL https://raw.githubusercontent.com/comacoded/claude-a-gotchi/main/install.sh | bash"><span class="prompt">$</span>curl -fsSL https://raw.githubusercontent.com/comacoded/claude-a-gotchi/main/install.sh | bash</code>
+              </div>
+            </div>
+            <p class="hint">Claude installs into the editors it detects: VS Code, Cursor, and VSCodium.</p>
+            <details>
+              <summary>Prefer to install by hand?</summary>
+              <p class="hint">Grab the <code>.vsix</code> from the <a href="https://github.com/comacoded/claude-a-gotchi/releases/latest">latest release</a>, then run <code>code --install-extension claude-a-gotchi.vsix --force</code>.</p>
+            </details>
+          </div>
+
+          <div class="panel proof-card" aria-label="Claude behavior summary">
+            <div class="proof-row">
+              <span class="chip"><canvas data-preset="work_coding"></canvas></span>
+              <div><strong>Activity aware</strong><span>Typing, pasted blocks, and AI completions change what Claude does.</span></div>
+            </div>
+            <div class="proof-row">
+              <span class="chip"><canvas data-preset="dance_bounce"></canvas></span>
+              <div><strong>Celebrates the wins</strong><span>Big generated blocks trigger confetti and a dance break.</span></div>
+            </div>
+            <div class="proof-row">
+              <span class="chip"><canvas data-preset="expression_sleep"></canvas></span>
+              <div><strong>Persistent care loop</strong><span>Hunger, energy, and mood carry across sessions.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">The companion loop</p>
+            <h2>Small reactions, real personality.</h2>
+          </div>
+          <p class="section-copy">Claude turns the invisible rhythm of coding into a tiny ambient toy: subtle enough for daily work, expressive enough to make the sidebar worth checking.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature">
+            <div class="screen"><canvas data-preset="work_coding"></canvas></div>
+            <div><h3>Codes while you code</h3><p>Claude puts its headphones on and works at the desk as edits land, then settles when the keyboard goes quiet.</p></div>
+          </article>
+          <article class="feature">
+            <div class="screen"><canvas data-preset="dance_djmix"></canvas></div>
+            <div><h3>Spots big AI blocks</h3><p>Large inserted chunks become a celebration moment instead of silent background work.</p></div>
+          </article>
+          <article class="feature">
+            <div class="screen"><canvas data-preset="hungry"></canvas></div>
+            <div><h3>Needs occasional care</h3><p>A simple context-and-feed loop gives Claude stakes without turning your editor into a chore list.</p></div>
+          </article>
+          <article class="feature">
+            <div class="screen"><canvas data-preset="expression_sleep"></canvas></div>
+            <div><h3>Rests when you do</h3><p>Idle time becomes a nap state, with energy recovery waiting for your next session.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="roadmap">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="kicker">Development timeline</p>
+            <h2>Planned and upcoming.</h2>
+          </div>
+          <p class="section-copy">A lightweight roadmap for the next wave of Claude-a-gotchi, moving from animation polish into play, personality, and richer habitats.</p>
+        </div>
+
+        <div class="timeline">
+          <article class="milestone">
+            <div class="milestone-card">
+              <span class="screen"><canvas data-preset="idle_breathe"></canvas></span>
+              <div class="milestone-body">
+                <div class="milestone-top"><span class="tag">Available now</span><h3>Current release</h3></div>
+                <p>Sidebar companion, typing and AI-block reactions, hunger, sleep, persistence, tic-tac-toe, one-liner installs, and 16 ClaudePix animation states.</p>
+              </div>
+            </div>
+          </article>
+          <article class="milestone">
+            <div class="milestone-card">
+              <span class="screen"><canvas data-preset="expression_wink"></canvas></span>
+              <div class="milestone-body">
+                <div class="milestone-top"><span class="tag">Next</span><h3>Expression pack</h3></div>
+                <p>More reaction frames — wink, surprise, look-around — wired to richer mood transitions when Claude changes state.</p>
+              </div>
+            </div>
+          </article>
+          <article class="milestone">
+            <div class="milestone-card">
+              <span class="screen"><canvas data-preset="eating"></canvas></span>
+              <div class="milestone-body">
+                <div class="milestone-top"><span class="tag">Planned</span><h3>More mini games</h3></div>
+                <p>Small in-editor games beyond tic-tac-toe, as quick breaks between coding sessions.</p>
+              </div>
+            </div>
+          </article>
+          <article class="milestone">
+            <div class="milestone-card">
+              <span class="screen"><canvas data-preset="dance_sway"></canvas></span>
+              <div class="milestone-body">
+                <div class="milestone-top"><span class="tag">Planned</span><h3>More personality</h3></div>
+                <p>Richer food interactions, new dances, and more ways for Claude to respond to the work happening in your editor.</p>
+              </div>
+            </div>
+          </article>
+          <article class="milestone">
+            <div class="milestone-card">
+              <span class="screen"><canvas data-preset="work_think"></canvas></span>
+              <div class="milestone-body">
+                <div class="milestone-top"><span class="tag">Future</span><h3>Theme and habitat upgrades</h3></div>
+                <p>New places for Claude to live and work, with seasonal scenes and customizable backdrops.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>Built by Nick Coma. MIT licensed. Animation style adapted from ClaudePix.</span>
+      <span><a href="https://github.com/comacoded/claude-a-gotchi">GitHub</a> / <a href="#quick-start">Install</a></span>
+    </div>
+  </footer>
+
+  <script src="animations.js"></script>
+  <script src="landing.js"></script>
+</body>
+</html>

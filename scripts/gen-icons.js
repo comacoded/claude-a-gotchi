@@ -56,4 +56,11 @@ ${body}
 ${eyes}
 </svg>\n`;
 fs.writeFileSync(path.join(MEDIA, 'icon-color.svg'), color);
+
+// Favicon for the landing page: same colour tile, written into docs/.
+const DOCS = path.join(__dirname, '..', 'docs');
+if (fs.existsSync(DOCS)) {
+  fs.writeFileSync(path.join(DOCS, 'favicon.svg'), color);
+  console.log('wrote docs/favicon.svg');
+}
 console.log('wrote activity-icon.svg + icon-color.svg');
