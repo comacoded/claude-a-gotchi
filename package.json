@@ -1,0 +1,129 @@
+{
+  "name": "claude-a-gotchi",
+  "displayName": "Claude-a-gotchi",
+  "description": "A pixel-art Claude companion who lives in your sidebar, codes along while you type, celebrates when a big block of code ships, gets hungry for context, and naps when you go idle.",
+  "version": "0.1.0",
+  "publisher": "nickcoma",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "tamagotchi",
+    "pet",
+    "companion",
+    "pixel art",
+    "claude",
+    "ai",
+    "fun",
+    "motivation"
+  ],
+  "galleryBanner": {
+    "color": "#1a1410",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nickcoma/claude-a-gotchi"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claude-buddy",
+          "title": "Claude",
+          "icon": "media/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "claude-buddy": [
+        {
+          "type": "webview",
+          "id": "claude.petView",
+          "name": "Build Buddy"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "claude.feed",
+        "title": "Claude: Feed Claude",
+        "category": "Claude"
+      },
+      {
+        "command": "claude.wake",
+        "title": "Claude: Wake Claude Up",
+        "category": "Claude"
+      },
+      {
+        "command": "claude.reset",
+        "title": "Claude: Reset Claude (new companion)",
+        "category": "Claude"
+      }
+    ],
+    "configuration": {
+      "title": "Claude-a-gotchi",
+      "properties": {
+        "claude.idleSleepMinutes": {
+          "type": "number",
+          "default": 6,
+          "minimum": 1,
+          "markdownDescription": "Minutes of no coding activity before Claude falls asleep."
+        },
+        "claude.playInviteMinutes": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "markdownDescription": "Minutes of idle before Claude may offer a game of tic-tac-toe. Should be less than `#claude.idleSleepMinutes#` so it asks before nodding off."
+        },
+        "claude.aiBlockLineThreshold": {
+          "type": "number",
+          "default": 12,
+          "minimum": 3,
+          "markdownDescription": "A single edit that inserts at least this many lines is treated as an AI/code-gen block and triggers Claude's celebration."
+        },
+        "claude.permadeath": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "When enabled, neglecting Claude (letting its stats hit zero) makes it leave for good. Disabled means it only gets sad and always recovers."
+        },
+        "claude.statDecayMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 5,
+          "markdownDescription": "How many minutes it takes for energy to drop one notch while idle."
+        },
+        "claude.hungerMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "markdownDescription": "Minutes for a full context window to drain down to the point where Claude gets hungry and asks to be fed."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.js --production",
+    "watch": "node esbuild.js --watch",
+    "compile": "node esbuild.js",
+    "package": "vsce package",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0",
+    "@vscode/vsce": "^2.24.0"
+  }
+}

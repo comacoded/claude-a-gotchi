@@ -1,0 +1,241 @@
+:root {
+  --accent: #CD7F6A;
+  --btn-bg: #2a1d18;
+  --btn-bg-hover: #3a2820;
+  --btn-border: #6b4a3f;
+  --bar-bg: var(--vscode-editorWidget-background, rgba(255, 255, 255, 0.08));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+  min-height: 100%;
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size, 13px);
+  color: var(--vscode-foreground);
+  user-select: none;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 132px;
+  padding: 6px 0 2px;
+}
+
+canvas#claude {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: 100%;
+  max-width: 168px;
+  height: auto;
+  background: #0f0f0f;
+  border-radius: 10px;
+}
+
+.speech {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--vscode-editorHoverWidget-background, #252526);
+  border: 1px solid var(--vscode-editorHoverWidget-border, #454545);
+  color: var(--vscode-editorHoverWidget-foreground, #ccc);
+  border-radius: 10px;
+  padding: 3px 9px;
+  font-size: 11px;
+  white-space: nowrap;
+  animation: pop 160ms ease-out;
+}
+
+.speech::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--vscode-editorHoverWidget-border, #454545);
+}
+
+@keyframes pop {
+  from { transform: translateX(-50%) scale(0.7); opacity: 0; }
+  to   { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+.nameplate {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  margin-top: 2px;
+}
+
+.age {
+  display: block;
+  font-weight: 400;
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 1px;
+}
+
+/* Quick-action shortcuts (play / dance): start a game or a dance without
+   waiting for Bob to go idle. Styled as keycaps to match VS Code's
+   keybinding labels. */
+.quick-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.quick-actions[hidden] { display: none; }
+
+.key-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 1px solid var(--vscode-keybindingLabel-border, rgba(255, 255, 255, 0.2));
+  border-bottom-color: var(--vscode-keybindingLabel-bottomBorder, rgba(255, 255, 255, 0.3));
+  border-radius: 3px;
+  background: var(--vscode-keybindingLabel-background, rgba(128, 128, 128, 0.17));
+  box-shadow: inset 0 -1px 0 var(--vscode-widget-shadow, rgba(0, 0, 0, 0.2));
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+}
+.key-btn > span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+}
+.key-btn:hover { background: var(--vscode-toolbar-hoverBackground, rgba(128, 128, 128, 0.3)); }
+.key-btn:active { transform: translateY(1px); }
+
+/* The "Back to work" button that stops a continuous dance. */
+#backToWork {
+  margin-top: 8px;
+}
+#backToWork[hidden] { display: none; }
+
+/* Pixel-art elements use a fixed retro palette and hard edges, so they read as
+   pixel art regardless of the active VS Code theme. */
+.pix {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+/* The `hidden` attribute must win over `display: flex` above, otherwise the
+   Feed button shows in every state. Only visible when Bob is hungry. */
+.actions[hidden] {
+  display: none;
+}
+
+.pix-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 16px;
+  border: 2px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: #f0e6e0;
+  cursor: pointer;
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.pix-btn img {
+  width: 16px;
+  height: 16px;
+}
+
+.pix-btn:hover { background: var(--btn-bg-hover); }
+.pix-btn:active { transform: translateY(1px); }
+
+/* A quieter secondary button (used for "Not now" / "Done"). */
+.pix-btn.ghost {
+  background: transparent;
+  border-color: var(--btn-border);
+  color: var(--vscode-foreground);
+}
+.pix-btn.ghost:hover { background: var(--bar-bg); }
+
+/* Bob's "wanna play?" invitation. */
+.invite {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.invite[hidden] { display: none; }
+
+/* Tic-tac-toe mini-game. */
+.game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.game[hidden] { display: none; }
+
+.ttt {
+  display: grid;
+  grid-template-columns: repeat(3, 36px);
+  grid-template-rows: repeat(3, 36px);
+  gap: 4px;
+}
+
+.ttt-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  border: 2px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: #f0e6e0;
+  cursor: pointer;
+  font-family: var(--vscode-editor-font-family, monospace);
+}
+.ttt-cell:hover:not(.taken) { background: var(--btn-bg-hover); }
+.ttt-cell.taken { cursor: default; }
+.ttt-cell.win { background: #4a2f24; border-color: var(--accent); }
+
+.ttt-status {
+  font-size: 11px;
+  min-height: 14px;
+  opacity: 0.85;
+}
+
+.ttt-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.ttt-controls .pix-btn { padding: 4px 12px; }
+.ttt-controls [hidden] { display: none; }

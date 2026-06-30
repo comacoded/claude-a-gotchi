@@ -1,0 +1,15 @@
+.vscode/**
+src/**
+scripts/**
+docs/**
+install.sh
+Dockerfile
+.bannercfg.json
+*.vsix
+node_modules/**
+esbuild.js
+tsconfig.json
+.gitignore
+**/*.map
+**/.DS_Store
+.git/**

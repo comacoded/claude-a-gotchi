@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Claude-a-gotchi — all states</title>
+<style>
+  body { margin: 0; background: #161310; color: #e8ddd5; font-family: ui-monospace, monospace; padding: 24px; }
+  h1 { font-size: 16px; font-weight: 600; letter-spacing: .3px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 18px; margin-top: 18px; }
+  .cell { background: #0f0f0f; border: 1px solid #2a2320; border-radius: 10px; padding: 10px; text-align: center; }
+  canvas { width: 128px; height: 128px; image-rendering: pixelated; background: #0f0f0f; border-radius: 8px; }
+  .label { margin-top: 8px; font-size: 11px; color: #b8a99e; }
+  .tag { font-size: 9px; color: #CD7F6A; text-transform: uppercase; letter-spacing: .5px; }
+</style>
+</head>
+<body>
+<h1>Claude-a-gotchi · all 16 animation presets</h1>
+<div class="grid" id="grid"></div>
+<script src="media/animations.js"></script>
+<script>
+const ANIM = window.CLAUDE_ANIM;
+const CELL = 8;
+function makeRenderer(canvas, preset) {
+  const ctx = canvas.getContext('2d');
+  const N = preset.frames[0].grid.length;
+  canvas.width = N * CELL; canvas.height = N * CELL;
+  ctx.imageSmoothingEnabled = false;
+  let i = 0, start = 0;
+  function paint(grid, pal) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let r = 0; r < grid.length; r++) for (let c = 0; c < grid[r].length; c++) {
+      const v = grid[r][c]; if (!v) continue;
+      ctx.fillStyle = pal[v] || '#CD7F6A';
+      ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+      ctx.strokeStyle = 'rgba(0,0,0,0.28)'; ctx.lineWidth = 1;
+      ctx.strokeRect(c*CELL+0.5, r*CELL+0.5, CELL-1, CELL-1);
+    }
+  }
+  function loop(ts) {
+    if (!start) start = ts;
+    const f = preset.frames;
+    if (ts - start >= f[i].hold) { i = (i+1) % f.length; start = ts; }
+    paint(f[i].grid, preset.pal || ANIM.creaturePal);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+}
+const order = ['idle_breathe','idle_blink','idle_look_around','work_coding','work_think',
+  'waking','hungry','eating','dance_bounce','dance_sway','dance_djmix','dance_bounce_dj',
+  'dance_sway_dj','expression_wink','expression_surprise','expression_sleep'];
+const host = document.getElementById('grid');
+for (const key of order) {
+  const p = ANIM.presets[key]; if (!p) continue;
+  const cell = document.createElement('div'); cell.className = 'cell';
+  const cv = document.createElement('canvas');
+  const lbl = document.createElement('div'); lbl.className = 'label';
+  lbl.innerHTML = `<span class="tag">${p.category||''}</span><br>${key}`;
+  cell.appendChild(cv); cell.appendChild(lbl); host.appendChild(cell);
+  makeRenderer(cv, p);
+}
+</script>
+</body>
+</html>
