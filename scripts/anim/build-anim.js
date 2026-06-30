@@ -101,13 +101,52 @@ const waking = {
   ],
 };
 
+// ── INSPECT: Claude holds up a magnifying glass and scans a block of code ──
+// Loupe palette (per-preset): rim=3, glass=4, handle=5, glint=6.
+const RIM = 3, GLASS = 4, HANDLE = 5, GLINT = 6;
+const INSPECT_PAL = ['transparent', '#CD7F6A', '#1a1a1a', '#aeb4ba', '#bfe0ef', '#5a4632', '#ffffff'];
+// Loupe with lens top-left at (r,c): 4-wide rim ring, 2x2 glass core, a short
+// handle stub trailing toward the gripping hand. glint adds a sparkle.
+function loupe(r, c, glint) {
+  const ops = [
+    [r, c + 1, RIM], [r, c + 2, RIM],
+    [r + 1, c, RIM], [r + 1, c + 1, GLASS], [r + 1, c + 2, GLASS], [r + 1, c + 3, RIM],
+    [r + 2, c, RIM], [r + 2, c + 1, GLASS], [r + 2, c + 2, GLASS], [r + 2, c + 3, RIM],
+    [r + 3, c + 1, RIM], [r + 3, c + 2, RIM],
+    [r + 4, c, HANDLE],
+  ];
+  if (glint) ops.push([r + 1, c + 1, GLINT]);
+  return ops;
+}
+// Eyes glance right toward the lens.
+const EYES_RIGHT = [[6, 7, B], [7, 7, B], [6, 8, Y], [7, 8, Y], [6, 13, B], [7, 13, B], [6, 14, Y], [7, 14, Y]];
+function inspectFrame(r, c, glint) {
+  let g = patch(CREATURE, [[9, 17, B], [8, 17, B]]); // short raised forearm gripping the loupe
+  g = patch(g, EYES_RIGHT);
+  g = patch(g, loupe(r, c, glint));
+  return g;
+}
+const inspect = {
+  name: 'inspect', category: 'state', pal: INSPECT_PAL.slice(),
+  frames: [
+    { hold: 360, grid: inspectFrame(2, 15, false) }, // glass up high
+    { hold: 150, grid: inspectFrame(2, 15, true) },  // glint
+    { hold: 300, grid: inspectFrame(4, 15, false) }, // scan down
+    { hold: 360, grid: inspectFrame(5, 14, false) }, // low, leaning in
+    { hold: 150, grid: inspectFrame(5, 14, true) },  // glint — found it
+    { hold: 300, grid: inspectFrame(4, 15, false) }, // scan back up
+    { hold: 320, grid: inspectFrame(2, 15, false) },
+  ],
+};
+
 presets.hungry = hungry;
 presets.eating = eating;
 presets.waking = waking;
+presets.inspect = inspect;
 
 const header = `// claude-a-gotchi animation data — 20x20 palette-indexed pixel frames.
 // 13 presets sourced from the ClaudePix library (claudepix.vercel.app) plus
-// hand-authored hungry / eating / waking states in the same creature style.
+// hand-authored hungry / eating / waking / inspect states in the same style.
 // Each preset: { name, category, pal:[colors], frames:[{hold, grid:[[idx]]}] }.
 // Generated — do not edit by hand.
 `;

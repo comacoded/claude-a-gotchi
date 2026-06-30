@@ -7,7 +7,7 @@ leave it alone too long.
 
 The animations are 20×20 palette-indexed pixel frames in the style of the
 [ClaudePix](https://claudepix.vercel.app/) library, plus a few hand-authored
-states (waking, hungry, eating) drawn to match.
+states (waking, hungry, eating, and a magnifying-glass inspect) drawn to match.
 
 ## What it does
 
@@ -24,10 +24,11 @@ states (waking, hungry, eating) drawn to match.
 
 ## Animation states
 
-16 presets drive the companion: `idle_breathe`, `idle_blink`,
+17 presets drive the companion: `idle_breathe`, `idle_blink`,
 `idle_look_around`, `work_coding`, `work_think`, `waking`, `hungry`, `eating`,
-`dance_bounce`, `dance_sway`, `dance_djmix`, `dance_bounce_dj`, `dance_sway_dj`,
-`expression_wink`, `expression_surprise`, `expression_sleep`.
+`inspect` (magnifying glass over a big code block), `dance_bounce`, `dance_sway`,
+`dance_djmix`, `dance_bounce_dj`, `dance_sway_dj`, `expression_wink`,
+`expression_surprise`, `expression_sleep`.
 
 Open `preview-states.html` (served over http) to see them all animating at once.
 

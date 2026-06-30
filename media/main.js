@@ -37,7 +37,7 @@
     waking: "waking",
     hungry: "hungry",
     fed: "eating",
-    celebrate: "dance_bounce",
+    celebrate: "inspect",
     wantsToPlay: "work_think",
     playing: "idle_breathe",
     sleeping: "expression_sleep",
@@ -49,7 +49,7 @@
     happy: "let's build something. ✦",
     content: "all systems nominal.",
     building: "writing it now…",
-    thrilled: "shipped it! 🎉",
+    thrilled: "ooh, a big block — let me look. 🔍",
     prompt: "what should we make next?",
     fed: "mmm, fresh tokens.",
     hungry: "running low on context…",
@@ -182,7 +182,7 @@
       return;
     }
 
-    if (s.activity === "celebrate" && presetKey !== "dance_bounce") {
+    if (s.activity === "celebrate" && presetKey !== "inspect") {
       spawnConfetti();
     }
     const wantKey = s.activity === "idle"

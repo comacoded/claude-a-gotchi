@@ -2,7 +2,7 @@
   "name": "claude-a-gotchi",
   "displayName": "Claude-a-gotchi",
   "description": "A pixel-art Claude companion who lives in your sidebar, codes along while you type, celebrates when a big block of code ships, gets hungry for context, and naps when you go idle.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "nickcoma",
   "license": "MIT",
   "icon": "media/icon.png",
